@@ -75,7 +75,7 @@ function installMarkerPath(): string {
 
 function installDir(): string {
   const local = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
-  return path.join(local, 'Programs', '流萤QQ弹窗显示');
+  return path.join(local, 'Programs', '流萤弹幕消息');
 }
 
 function rendererFile(name: string): string {
@@ -423,7 +423,7 @@ function removeShortcuts(): void {
     process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'),
     'Microsoft', 'Windows', 'Start Menu', 'Programs'
   );
-  for (const name of ['流萤QQ弹窗显示', 'Firefly QQ Danmaku']) {
+  for (const name of ['流萤弹幕消息', 'firefly_danmaku_message']) {
     for (const file of [
       path.join(desktopDir, name + '.lnk'),
       path.join(startMenuDir, name + '.lnk')
@@ -441,7 +441,7 @@ function removeAutostartEntry(): void {
 
 function removeUninstallRegistryEntry(): void {
   try {
-    execFileSync('reg', ['delete', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\流萤QQ弹窗显示', '/f'], { windowsHide: true });
+    execFileSync('reg', ['delete', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\流萤弹幕消息', '/f'], { windowsHide: true });
   } catch { /* ignore */ }
 }
 
@@ -704,7 +704,7 @@ function createShortcuts(target: string): void {
 }
 
 function writeUninstallEntry(target: string): void {
-  const key = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\流萤QQ弹窗显示';
+  const key = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\流萤弹幕消息';
   const values: Array<[string, string]> = [
     ['DisplayName', productName(settings.language)],
     ['DisplayVersion', app.getVersion()],
@@ -722,7 +722,7 @@ function autostartRunKey(): string {
 }
 
 function autostartValueName(): string {
-  return '流萤QQ弹窗显示';
+  return '流萤弹幕消息';
 }
 
 function regQuery(key: string): Promise<string> {
@@ -734,7 +734,7 @@ function regQuery(key: string): Promise<string> {
 }
 
 async function setAutostart(enabled: boolean): Promise<boolean> {
-  const target = path.join(installDir(), '流萤QQ弹窗显示.exe');
+  const target = path.join(installDir(), '流萤弹幕消息.exe');
   const cmd = '"' + target + '" --silent';
   return new Promise((resolve) => {
     const args = enabled
@@ -748,12 +748,12 @@ async function setAutostart(enabled: boolean): Promise<boolean> {
 
 async function getAutostart(): Promise<boolean> {
   const out = await regQuery(autostartRunKey());
-  const target = path.join(installDir(), '流萤QQ弹窗显示.exe');
+  const target = path.join(installDir(), '流萤弹幕消息.exe');
   return out.includes(autostartValueName()) && out.includes(target);
 }
 
 function finishInstall(): void {
-  const target = path.join(installDir(), '流萤QQ弹窗显示.exe');
+  const target = path.join(installDir(), '流萤弹幕消息.exe');
   if (fs.existsSync(target)) {
     spawn(target, ['--installed'], { detached: true, stdio: 'ignore' }).unref();
   }
@@ -773,7 +773,7 @@ async function performInstall(): Promise<{ ok: boolean; installDir?: string; err
     sendInstallProgress(5, translate(settings.language, 'installer.progress.prepare'));
     const dir = installDir();
     fs.mkdirSync(dir, { recursive: true });
-    const target = path.join(dir, '流萤QQ弹窗显示.exe');
+    const target = path.join(dir, '流萤弹幕消息.exe');
     sendInstallProgress(25, translate(settings.language, 'installer.progress.copy'));
     const source = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
     if (source && fs.existsSync(source) && path.resolve(source).toLowerCase() !== path.resolve(target).toLowerCase()) {

@@ -1,4 +1,4 @@
-# 流萤QQ弹窗显示
+# 流萤弹幕消息
 
 基于 Electron 的 QQ / 微信消息顶部弹幕工具。程序通过 OneBot v11 正向 WebSocket 获取 QQ 消息，通过 wechatauto-replica 读取微信 4.x 本地数据库获取微信消息，在屏幕顶部以弹幕形式显示私聊、群聊和群通知，并常驻系统托盘。
 
@@ -28,7 +28,7 @@
 
 ## 安装与使用
 
-1. 下载 Release 中的 `Firefly-QQ-Danmaku-Setup.exe`（GitHub 会重命名中文资产名，下载后可在本地改名为 `流萤QQ弹窗显示.exe`）。
+1. 下载 Release 中的 `firefly_danmaku_message.exe`（GitHub 会重命名中文资产名，下载后可在本地改名为 `流萤弹幕消息.exe`）。
 2. 运行安装器，按向导完成环境检测与安装。
 3. 安装完成后程序常驻系统托盘，并通过 OneBot WebSocket 接收 QQ 消息。
 4. （可选）如需接收微信消息：安装并登录官方微信 4.x，安装 Python 3.9+ 并执行 pip install wechatauto-replica，然后在设置页勾选「启用微信消息」。
@@ -41,7 +41,7 @@ npm run build
 npm run dist
 ```
 
-构建产物位于 `release/流萤QQ弹窗显示.exe`。
+构建产物位于 `release/流萤弹幕消息.exe`。
 
 ## 卸载
 

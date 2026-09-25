@@ -1,7 +1,7 @@
 {
-  "name": "firefly-qq-danmaku",
+  "name": "firefly_danmaku_message",
   "version": "1.1.0",
-  "description": "流萤QQ弹窗显示 - QQ消息顶部弹幕",
+  "description": "流萤弹幕消息 - 消息顶部弹幕",
   "main": "dist/main/main.js",
   "author": "Firefly",
   "license": "MIT",

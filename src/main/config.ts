@@ -35,6 +35,7 @@ export function settingsPath(): string {
 export function loadSettings(): AppSettings {
   if (settings) return settings;
   const file = settingsPath();
+  migrateLegacySettings(file);
   try {
     const raw = fs.readFileSync(file, 'utf8');
     const parsed = JSON.parse(raw);
@@ -43,6 +44,17 @@ export function loadSettings(): AppSettings {
     settings = { ...defaultSettings };
   }
   return settings as AppSettings;
+}
+
+function migrateLegacySettings(targetFile: string): void {
+  try {
+    if (fs.existsSync(targetFile)) return;
+    const legacyFile = path.join(app.getPath('appData'), 'firefly-qq-danmaku', 'settings.json');
+    if (fs.existsSync(legacyFile)) {
+      fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+      fs.copyFileSync(legacyFile, targetFile);
+    }
+  } catch { /* ignore */ }
 }
 
 export function saveSettings(next: AppSettings): AppSettings {

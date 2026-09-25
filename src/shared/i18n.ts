@@ -5,9 +5,9 @@ export interface I18nParams {
 }
 
 const zh: Record<string, string> = {
-  'app.name': '流萤QQ弹窗显示',
+  'app.name': '流萤弹幕消息',
 
-  'installer.windowTitle': '流萤QQ弹窗显示 - 环境检测与安装',
+  'installer.windowTitle': '流萤弹幕消息 - 环境检测与安装',
   'installer.tagline': '安全、简洁的 QQ 顶部弹幕',
   'installer.langTitle': '选择语言',
   'installer.riskTitle': '安装前请知悉',
@@ -209,9 +209,9 @@ const zh: Record<string, string> = {
 };
 
 const en: Record<string, string> = {
-  'app.name': 'Firefly QQ Danmaku',
+  'app.name': 'firefly_danmaku_message',
 
-  'installer.windowTitle': 'Firefly QQ Danmaku - Environment Check & Install',
+  'installer.windowTitle': 'firefly_danmaku_message - Environment Check & Install',
   'installer.tagline': 'Safe, simple top-screen danmaku for QQ',
   'installer.langTitle': 'Select language',
   'installer.riskTitle': 'Before you install',
@@ -428,5 +428,5 @@ export function translate(lang: Language, key: string, params?: I18nParams): str
 }
 
 export function productName(lang: Language): string {
-  return lang === 'en' ? 'Firefly QQ Danmaku' : '流萤QQ弹窗显示';
+  return lang === 'en' ? 'firefly_danmaku_message' : '流萤弹幕消息';
 }
