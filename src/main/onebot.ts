@@ -35,6 +35,7 @@ export class OneBotClient extends EventEmitter {
   private specialCareFriends = new Set<number>();
   private friendNameCache = new Map<number, string>();
   private selfId: number | null = null;
+  private loginNickname = '';
 
   start(settings: AppSettings): void {
     this.settings = settings;
@@ -83,7 +84,13 @@ export class OneBotClient extends EventEmitter {
     ws.on('open', () => {
       this.emit('state', { connected: true, message: translate(this.settings?.language || 'zh', 'conn.connected', { url }) } as ConnectionState);
       this.refresh().catch(() => { /* non-fatal */ });
-      this.getLoginInfo().then((id) => { if (id !== null) this.selfId = id; }).catch(() => { /* ignore */ });
+      this.getLoginInfo().then((info) => {
+        if (info) {
+          this.selfId = info.userId;
+          this.loginNickname = info.nickname;
+          this.emit('account', { userId: info.userId, nickname: info.nickname });
+        }
+      }).catch(() => { /* ignore */ });
     });
 
     ws.on('message', (data: Buffer) => {
@@ -277,12 +284,13 @@ export class OneBotClient extends EventEmitter {
     return this.selfId;
   }
 
-  async getLoginInfo(): Promise<number | null> {
+  async getLoginInfo(): Promise<{ userId: number; nickname: string } | null> {
     try {
       const data = await this.call('get_login_info', {}, 5000);
       const info = (data && data.data ? data.data : data) as any;
       const id = Number(info && info.user_id);
-      return Number.isFinite(id) && id > 0 ? id : null;
+      if (!(Number.isFinite(id) && id > 0)) return null;
+      return { userId: id, nickname: String(info && info.nickname ? info.nickname : '') };
     } catch {
       return null;
     }

@@ -19,6 +19,7 @@ export interface OB11MessageEvent {
   user_id: number;
   group_id?: number;
   message_id?: number;
+  time?: number;
   sender: OB11Sender;
   raw_message?: string;
   message: Segment[];
@@ -32,6 +33,7 @@ export interface OB11NoticeEvent {
   group_id?: number;
   user_id?: number;
   operator_id?: number;
+  time?: number;
 }
 
 export interface OB11MetaEvent {
@@ -62,14 +64,16 @@ export interface AppSettings {
   wsUrl: string;
   token: string;
   reconnectMs: number;
-  showPrivate: boolean;
-  showGroup: boolean;
-  showNotice: boolean;
   scopeSpecialPrivate: boolean;
   scopeNormalPrivate: boolean;
   scopeNormalGroup: boolean;
   wechatPrivate: boolean;
   wechatGroup: boolean;
+  maxBannerCount: number;
+  bannerBgColor: string;
+  bannerLabelColor: string;
+  bannerNickColor: string;
+  bannerTextColor: string;
   maxHeightPercent: number;
   fontSize: number;
   opacity: number;

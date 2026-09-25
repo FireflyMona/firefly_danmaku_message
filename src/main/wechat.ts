@@ -11,6 +11,8 @@ export interface WechatStateInfo {
   state: WechatState;
   message: string;
   loggedIn: boolean;
+  selfWxid?: string;
+  nickname?: string;
 }
 
 function resolvePython(): string | null {
@@ -46,6 +48,7 @@ export class WechatClient extends EventEmitter {
   private state: WechatState = 'idle';
   private loggedIn = false;
   private selfWxid = '';
+  private nickname = '';
   private buffer = '';
   private language: Language = 'zh';
 
@@ -107,6 +110,7 @@ export class WechatClient extends EventEmitter {
     }
     this.loggedIn = false;
     this.selfWxid = '';
+    this.nickname = '';
     this.buffer = '';
     this.setState('idle', translate(this.language, 'wechat.state.idle'), false);
   }
@@ -122,7 +126,7 @@ export class WechatClient extends EventEmitter {
   private setState(state: WechatState, message: string, loggedIn: boolean): void {
     this.state = state;
     this.loggedIn = loggedIn;
-    this.emit('state', { state, message, loggedIn } as WechatStateInfo);
+    this.emit('state', { state, message, loggedIn, selfWxid: this.selfWxid, nickname: this.nickname } as WechatStateInfo);
   }
 
   private onStdout(chunk: Buffer): void {
@@ -143,6 +147,7 @@ export class WechatClient extends EventEmitter {
     switch (msg.event) {
       case 'ready':
         this.selfWxid = String(msg.selfWxid || '');
+        this.nickname = String(msg.nickname || '');
         this.setState('ready', translate(this.language, 'wechat.state.ready', { nick: msg.nickname || translate(this.language, 'wechat.state.signedIn') }), true);
         break;
       case 'error':

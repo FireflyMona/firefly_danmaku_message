@@ -1,4 +1,4 @@
-:root { --banner-font-size: 16px; --label-color: #0a7cff; --nick-color: #ff6b00; }
+:root { --banner-font-size: 16px; --banner-bg-color: #ffffff; --label-color: #0a7cff; --nick-color: #ff6b00; --text-color: #000000; }
 * { box-sizing: border-box; }
 html, body { margin: 0; width: 100%; height: 100%; background: transparent; overflow: hidden; }
 body { font-family: "Microsoft YaHei", "Segoe UI", system-ui, sans-serif; }
@@ -17,10 +17,10 @@ body { font-family: "Microsoft YaHei", "Segoe UI", system-ui, sans-serif; }
   width: 100%;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(245, 247, 250, 0.92));
+  background: var(--banner-bg-color);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
   padding: 8px 12px;
-  color: #000000;
+  color: var(--text-color);
   font-size: var(--banner-font-size);
   line-height: 1.4;
   animation: enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -76,7 +76,7 @@ body { font-family: "Microsoft YaHei", "Segoe UI", system-ui, sans-serif; }
   word-break: break-all;
 }
 .nick { color: var(--nick-color); font-weight: 600; }
-.text { color: #000000; }
+.text { color: var(--text-color); }
 .banner.special .label { color: #c2185b; }
 .banner.special .nick { color: #6a1b9a; }
 .banner.special .text { color: #000000; }

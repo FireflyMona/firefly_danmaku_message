@@ -41,7 +41,7 @@ if (silentStart) {
 
 let settings: AppSettings = defaultSettings;
 let installerWindow: BrowserWindow | null = null;
-let settingsWindow: BrowserWindow | null = null;
+let consoleWindow: BrowserWindow | null = null;
 let bannerWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let trayMenuWindow: BrowserWindow | null = null;
@@ -58,6 +58,8 @@ let wechatForeground = false;
 let sessionLocked = false;
 let suspended = false;
 let displayOff = false;
+let lastResumeAt = 0;
+const STALE_DROP_TOLERANCE_MS = 30000;
 let powerMonitorBound = false;
 let displayPowerWatcher: DisplayPowerWatcher | null = null;
 let qqWindowWatcher: QQWindowWatcher | null = null;
@@ -96,6 +98,11 @@ function durationFor(item: BannerItem): number {
 
 function isSystemInactive(): boolean {
   return sessionLocked || suspended || displayOff;
+}
+
+function shouldDropStaleMessage(msgTimeMs: number): boolean {
+  if (lastResumeAt <= 0 || !Number.isFinite(msgTimeMs) || msgTimeMs <= 0) return false;
+  return msgTimeMs <= lastResumeAt - STALE_DROP_TOLERANCE_MS;
 }
 
 function effectiveBannerVisible(): boolean {
@@ -161,7 +168,11 @@ function sendBannerConfig(): void {
   bannerWindow.webContents.send('banner:config', {
     fontSize: settings.fontSize,
     opacity: settings.opacity,
-    width: bannerWindow.getBounds().width
+    width: bannerWindow.getBounds().width,
+    bgColor: settings.bannerBgColor,
+    labelColor: settings.bannerLabelColor,
+    nickColor: settings.bannerNickColor,
+    textColor: settings.bannerTextColor
   });
 }
 
@@ -181,6 +192,7 @@ function applyBannerBounds(): void {
 function createScheduler(): void {
   scheduler = new BannerScheduler({
     getMaxHeight: () => (bannerWindow ? bannerWindow.getBounds().height : 0),
+    getMaxCount: () => (settings.maxBannerCount || 0),
     measure: (item) => {
       let attempts = 0;
       const send = () => {
@@ -207,8 +219,13 @@ function startOneBot(): void {
   if (onebot) onebot.stop();
   onebot = new OneBotClient();
   onebot.on('state', (state: ConnectionState) => {
-    if (settingsWindow && !settingsWindow.isDestroyed()) {
-      settingsWindow.webContents.send('connection:state', state);
+    if (consoleWindow && !consoleWindow.isDestroyed()) {
+      consoleWindow.webContents.send('connection:state', state);
+    }
+  });
+  onebot.on('account', (info: { userId: number | null; nickname: string }) => {
+    if (consoleWindow && !consoleWindow.isDestroyed()) {
+      consoleWindow.webContents.send('qq:account', info);
     }
   });
   onebot.on('message', (ev: OB11MessageEvent) => {
@@ -222,6 +239,8 @@ function startOneBot(): void {
 
 async function handleMessageEvent(ev: OB11MessageEvent): Promise<void> {
   if (isSystemInactive()) return;
+  const msgTime = typeof ev.time === 'number' && ev.time > 0 ? ev.time * 1000 : 0;
+  if (shouldDropStaleMessage(msgTime)) return;
   if (!onebot) return;
   if (ev.self_id) cachedSelfId = ev.self_id;
   const item = await normalizeMessageEvent(ev, settings, onebot);
@@ -230,13 +249,15 @@ async function handleMessageEvent(ev: OB11MessageEvent): Promise<void> {
 
 async function handleNoticeEvent(ev: OB11NoticeEvent): Promise<void> {
   if (isSystemInactive()) return;
+  const msgTime = typeof ev.time === 'number' && ev.time > 0 ? ev.time * 1000 : 0;
+  if (shouldDropStaleMessage(msgTime)) return;
   if (!onebot) return;
   const item = await normalizeNoticeEvent(ev, settings, onebot);
   if (item && scheduler) scheduler.request(item);
 }
 function sendWechatState(info: WechatStateInfo): void {
-  if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.webContents.send('wechat:state', info);
+  if (consoleWindow && !consoleWindow.isDestroyed()) {
+    consoleWindow.webContents.send('wechat:state', info);
   }
 }
 
@@ -268,6 +289,8 @@ function restartWechat(): void {
 
 async function handleWechatMessage(payload: WechatMessagePayload): Promise<void> {
   if (isSystemInactive()) return;
+  const msgTime = typeof payload.ts === 'number' && payload.ts > 0 ? payload.ts * 1000 : 0;
+  if (shouldDropStaleMessage(msgTime)) return;
   if (!scheduler) return;
   const item = normalizeWechatMessage(payload, settings);
   if (item && scheduler) scheduler.request(item);
@@ -545,7 +568,7 @@ function updateTrayMenuVisibility(): void {
 }
 
 function broadcastI18nChanged(lang: Language): void {
-  const wins = [installerWindow, settingsWindow, trayMenuWindow, traySubmenuWindow, uninstallDialogWindow];
+  const wins = [installerWindow, consoleWindow, trayMenuWindow, traySubmenuWindow, uninstallDialogWindow];
   for (const w of wins) {
     if (w && !w.isDestroyed()) w.webContents.send('i18n:changed', lang);
   }
@@ -554,8 +577,8 @@ function broadcastI18nChanged(lang: Language): void {
 function applyLanguage(lang: Language): void {
   if (tray) tray.setToolTip(productName(lang));
   if (wechat) wechat.setLanguage(lang);
-  if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.setTitle(productName(lang) + ' - ' + translate(lang, 'settings.title'));
+  if (consoleWindow && !consoleWindow.isDestroyed()) {
+    consoleWindow.setTitle(productName(lang) + ' - ' + translate(lang, 'console.title'));
   }
   if (installerWindow && !installerWindow.isDestroyed()) {
     installerWindow.setTitle(translate(lang, 'installer.windowTitle'));
@@ -610,25 +633,26 @@ function openTrayMenu(): void {
   });
 }
 
-function openSettings(): void {
-  if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.focus();
+function openConsole(): void {
+  if (consoleWindow && !consoleWindow.isDestroyed()) {
+    consoleWindow.focus();
     return;
   }
-  settingsWindow = new BrowserWindow({
-    width: 560,
-    height: 680,
-    title: productName(settings.language) + ' - ' + translate(settings.language, 'settings.title'),
+  consoleWindow = new BrowserWindow({
+    width: 680,
+    height: 820,
+    title: productName(settings.language) + ' - ' + translate(settings.language, 'console.title'),
     autoHideMenuBar: true,
+    icon: path.join(__dirname, '..', '..', 'assets', 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     }
   });
-  settingsWindow.loadFile(rendererFile('settings.html'));
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
+  consoleWindow.loadFile(rendererFile('console.html'));
+  consoleWindow.on('closed', () => {
+    consoleWindow = null;
   });
 }
 
@@ -800,13 +824,31 @@ function registerIpc(): void {
 
   ipcMain.handle('settings:get', (): AppSettings => settings);
 
+  ipcMain.handle('settings:reset', (): AppSettings => {
+    const keep = {
+      wsUrl: settings.wsUrl,
+      token: settings.token,
+      reconnectMs: settings.reconnectMs,
+      language: settings.language,
+      enableWechat: settings.enableWechat
+    };
+    const oldLanguage = settings.language;
+    settings = saveSettings({ ...defaultSettings, ...keep });
+    applyBannerBounds();
+    if (scheduler) scheduler.recheck();
+    if (oldLanguage !== settings.language) applyLanguage(settings.language);
+    return settings;
+  });
+
   ipcMain.handle('settings:set', (_event, next: AppSettings): AppSettings => {
     const oldWechat = settings.enableWechat;
     const oldLanguage = settings.language;
+    const connChanged = settings.wsUrl !== next.wsUrl || settings.token !== next.token || settings.reconnectMs !== next.reconnectMs;
     settings = saveSettings(next);
     applyBannerBounds();
+    if (scheduler) scheduler.recheck();
     if (oldLanguage !== settings.language) applyLanguage(settings.language);
-    if (onebot && !quitting) {
+    if (connChanged && onebot && !quitting) {
       onebot.stop();
       onebot.start(settings);
     }
@@ -880,6 +922,10 @@ function registerIpc(): void {
     return ok;
   });
 
+  ipcMain.handle('tray:open-console', (): void => {
+    openConsole();
+  });
+
   ipcMain.handle('i18n:get-language', (): Language => settings.language);
   ipcMain.handle('i18n:set-language', (_event, lang: Language): Language => {
     const next: Language = lang === 'en' ? 'en' : 'zh';
@@ -903,6 +949,7 @@ function bindPowerMonitor(): void {
   });
   powerMonitor.on('resume', () => {
     suspended = false;
+    lastResumeAt = Date.now();
     applyBannerVisibility();
   });
   powerMonitor.on('lock-screen', () => {
@@ -970,6 +1017,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   quitting = true;
   if (uninstallDialogWindow && !uninstallDialogWindow.isDestroyed()) uninstallDialogWindow.destroy();
+  if (consoleWindow && !consoleWindow.isDestroyed()) consoleWindow.destroy();
   if (mouseClickWatcher) {
     mouseClickWatcher.stop();
     mouseClickWatcher = null;

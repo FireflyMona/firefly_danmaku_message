@@ -55,11 +55,9 @@ export async function normalizeMessageEvent(
   const special = !isGroup && client.isSpecialCare(ev.sender.user_id);
 
   if (!isGroup) {
-    if (!settings.showPrivate) return null;
     if (special && !settings.scopeSpecialPrivate) return null;
     if (!special && !settings.scopeNormalPrivate) return null;
   } else {
-    if (!settings.showGroup) return null;
     if (!settings.scopeNormalGroup) return null;
     if (groupId && client.isGroupDnd(groupId)) return null;
   }
@@ -86,7 +84,6 @@ export async function normalizeNoticeEvent(
   settings: AppSettings,
   client: OneBotClient
 ): Promise<BannerItem | null> {
-  if (!settings.showNotice) return null;
   const noticeType = ev.notice_type;
   const groupId = ev.group_id;
   if (!groupId) return null;
@@ -154,10 +151,8 @@ export function normalizeWechatMessage(payload: WechatMessagePayload, settings: 
   if (payload.type === 'system') return null;
   const isGroup = !!payload.isGroup;
   if (isGroup) {
-    if (!settings.showGroup) return null;
     if (!settings.wechatGroup) return null;
   } else {
-    if (!settings.showPrivate) return null;
     if (!settings.wechatPrivate) return null;
   }
   const lang = settings.language;

@@ -8,6 +8,7 @@ interface ActiveBanner {
 
 export interface SchedulerHooks {
   getMaxHeight: () => number;
+  getMaxCount: () => number;
   measure: (item: BannerItem) => void;
   show: (item: BannerItem) => void;
   remove: (id: string) => void;
@@ -31,6 +32,12 @@ export class BannerScheduler {
     return Math.max(0, this.hooks.getMaxHeight());
   }
 
+  private canActivateByCount(): boolean {
+    const maxCount = this.hooks.getMaxCount();
+    if (maxCount > 0 && this.active.size >= maxCount) return false;
+    return true;
+  }
+
   request(item: BannerItem): void {
     if (this.active.has(item.id) || this.pending.has(item.id)) return;
     this.pending.set(item.id, item);
@@ -42,7 +49,7 @@ export class BannerScheduler {
     if (!item) return;
     this.pending.delete(id);
     item.height = Math.max(1, height);
-    if (this.getUsedHeight() + height <= this.getMaxHeight()) {
+    if (this.canActivateByCount() && this.getUsedHeight() + height <= this.getMaxHeight()) {
       this.activate(item);
     } else {
       this.queue.push(item);
@@ -69,6 +76,7 @@ export class BannerScheduler {
 
   private drainQueue(): void {
     while (this.queue.length > 0) {
+      if (!this.canActivateByCount()) break;
       const max = this.getMaxHeight();
       const used = this.getUsedHeight();
       const idx = this.queue.findIndex((q) => used + (q.height || 1) <= max);
@@ -76,6 +84,10 @@ export class BannerScheduler {
       const [item] = this.queue.splice(idx, 1);
       this.activate(item);
     }
+  }
+
+  recheck(): void {
+    this.drainQueue();
   }
 
   clear(): void {

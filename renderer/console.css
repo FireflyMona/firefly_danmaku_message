@@ -1,0 +1,60 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  background: #f5f7fb;
+  color: #17233b;
+  font-family: "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+}
+main { max-width: 680px; margin: 0 auto; padding: 20px 20px 28px; }
+header { margin-bottom: 14px; }
+h1 { margin: 0; font-size: 20px; }
+
+fieldset {
+  border: 1px solid #e5e9f2;
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px 16px 14px;
+  margin: 0 0 14px;
+}
+legend { padding: 0 8px; font-size: 13px; font-weight: 600; color: #33405a; }
+
+label { display: block; font-size: 13px; color: #35415a; margin: 6px 0; }
+label.check { display: flex; align-items: center; gap: 8px; }
+label.check input { margin: 0; accent-color: #0a7cff; }
+input[type="number"], select { width: 110px; padding: 6px 8px; border: 1px solid #d5dce8; border-radius: 7px; font-size: 13px; }
+input[type="color"] { width: 44px; height: 28px; padding: 0; border: 1px solid #d5dce8; border-radius: 7px; background: #fff; cursor: pointer; }
+
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; }
+.grid label { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0; }
+.grid label.color span { flex: 1; }
+
+.scope-group { margin: 8px 0; }
+.scope-head { font-weight: 700; font-size: 13px; color: #17233b; margin: 10px 0 4px; }
+.scope-sub { font-size: 12px; color: #6b7688; margin: 8px 0 2px; }
+
+.hint { margin: 6px 0 0; font-size: 12px; color: #6b7688; }
+.conn { margin: 4px 0; font-size: 13px; color: #6b7688; }
+.conn.on { color: #16a34a; }
+
+footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+button {
+  border: 0; border-radius: 9px; padding: 10px 18px; cursor: pointer; font-size: 14px;
+}
+.primary { background: #0a7cff; color: #fff; }
+.primary:hover { background: #0868d8; }
+.secondary { background: #edf2f9; color: #33405a; }
+.secondary:hover { background: #e2eaf5; }
+
+input[type="text"], input[type="password"] { width: 100%; padding: 6px 8px; border: 1px solid #d5dce8; border-radius: 7px; font-size: 13px; }
+
+.toast {
+  display: inline-block;
+  margin-right: auto;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 13px;
+  font-weight: 600;
+}
+.toast.hidden { display: none; }

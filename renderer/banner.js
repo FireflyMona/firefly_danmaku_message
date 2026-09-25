@@ -78,4 +78,8 @@ window.api.onBannerRemove(function (id) {
 
 window.api.onBannerConfig(function (config) {
   document.documentElement.style.setProperty('--banner-font-size', (config.fontSize || 16) + 'px');
+  document.documentElement.style.setProperty('--banner-bg-color', config.bgColor || '#ffffff');
+  document.documentElement.style.setProperty('--label-color', config.labelColor || '#0a7cff');
+  document.documentElement.style.setProperty('--nick-color', config.nickColor || '#ff6b00');
+  document.documentElement.style.setProperty('--text-color', config.textColor || '#000000');
 });

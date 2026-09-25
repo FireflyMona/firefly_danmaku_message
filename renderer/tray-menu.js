@@ -2,10 +2,9 @@ const toggleBtn = document.getElementById('toggleBtn');
 const uninstallBtn = document.getElementById('uninstallBtn');
 const quitBtn = document.getElementById('quitBtn');
 const refreshBtn = document.getElementById('refreshBtn');
+const consoleBtn = document.getElementById('consoleBtn');
 const showText = document.getElementById('showText');
 const hideText = document.getElementById('hideText');
-const boardQq = document.getElementById('boardQq');
-const boardWechat = document.getElementById('boardWechat');
 
 function applyVisibility(v) {
   const show = v !== false;
@@ -26,6 +25,11 @@ toggleBtn.addEventListener('click', async function () {
   applyVisibility(v);
 });
 
+consoleBtn.addEventListener('click', async function () {
+  if (!window.api || !window.api.trayOpenConsole) return;
+  await window.api.trayOpenConsole();
+});
+
 refreshBtn.addEventListener('click', async function () {
   if (!window.api || !window.api.trayRefresh) return;
   await window.api.trayRefresh();
@@ -40,15 +44,3 @@ quitBtn.addEventListener('click', async function () {
   if (!window.api || !window.api.trayQuit) return;
   await window.api.trayQuit();
 });
-
-function bindBoard(board, kind) {
-  if (!board) return;
-  board.addEventListener('mouseenter', function () {
-    if (!window.api || !window.api.traySubmenuShow) return;
-    const rect = board.getBoundingClientRect();
-    window.api.traySubmenuShow(kind, Math.round(rect.top));
-  });
-}
-
-bindBoard(boardQq, 'qq');
-bindBoard(boardWechat, 'wechat');
